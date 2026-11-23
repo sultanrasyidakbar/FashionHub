@@ -15,10 +15,15 @@ class ApiException implements Exception {
 }
 
 class Api {
+  // Bisa diarahkan saat build, misalnya:
+  // flutter build web --dart-define=API_BASE_URL=https://fashionhub-api.vercel.app
+  static const String _override = String.fromEnvironment('API_BASE_URL');
+
   // Android emulator reaches the host through 10.0.2.2; web/desktop use localhost.
   // On a physical Android device, replace this with the laptop's LAN IP.
-  static String get baseUrl =>
-      defaultTargetPlatform == TargetPlatform.android && !kIsWeb
+  static String get baseUrl => _override.isNotEmpty
+      ? _override
+      : defaultTargetPlatform == TargetPlatform.android && !kIsWeb
       ? 'http://10.0.2.2:3000'
       : 'http://localhost:3000';
 
