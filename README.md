@@ -1,13 +1,14 @@
 # FashionHub — Aplikasi Digital UMKM Fashion
 
-Manajemen produk dan stok untuk toko fashion. Stack: **Node.js + Express**, **MySQL**, **Flutter**, upload gambar via **Multer + Cloudinary** (backend memvalidasi file, mengunggah ke Cloudinary, URL disimpan di DB).
+Manajemen produk dan stok untuk toko fashion. Stack: **Node.js + Express**, **PostgreSQL**, **Flutter**, upload gambar via **Multer + Cloudinary** (backend memvalidasi file, mengunggah ke Cloudinary, URL disimpan di DB).
 
 ## Struktur
 ```
-database/schema.sql   -> DDL (roles, users, categories, products) + isi tabel roles
-docs/ERD.md           -> ERD (Mermaid)
-backend/              -> REST API (Cloudinary di src/config/cloudinary.js)
-mobile/               -> source Flutter (lib/ + pubspec.yaml)
+database/schema.sql          -> DDL MySQL lama (arsip, dipakai sebagai sumber migrasi)
+database/schema.postgres.sql -> DDL PostgreSQL yang dipakai sekarang
+docs/ERD.md                  -> ERD (Mermaid)
+backend/                     -> REST API (Cloudinary di src/config/cloudinary.js)
+mobile/                      -> source Flutter (lib/ + pubspec.yaml)
 ```
 
 ## Setup Cloudinary
@@ -16,13 +17,25 @@ mobile/               -> source Flutter (lib/ + pubspec.yaml)
 
 ## Menjalankan Backend
 ```bash
-mysql -u root -p < database/schema.sql
+createdb fashionhub                # atau buat database lewat pgAdmin/psql
 cd backend
 cp .env.example .env        # isi DB_*, JWT_SECRET, dan CLOUDINARY_*
 npm install
+npm run db:init             # membuat tabel dari database/schema.postgres.sql
 npm run seed                # admin@fashionhub.com / Admin123 + 4 kategori + 6 produk contoh
 npm start                   # http://localhost:3000
 ```
+
+Memindahkan data dari database MySQL lama:
+
+```bash
+cd backend
+node scripts/migrate-to-postgres.js --mysql .env.mysql --pg .env
+```
+
+`--mysql` menunjuk file env berisi kredensial MySQL sumber, `--pg` file env PostgreSQL
+tujuan. Skrip membuat tabel, menyalin seluruh baris beserta id aslinya, lalu memeriksa
+integritas relasi.
 
 ## Menjalankan Flutter
 ```bash
@@ -70,7 +83,7 @@ Semua respons: `{ "success": bool, "message": str, "data": ..., "errors": [...]?
 Upload: hanya JPG/PNG/WEBP, maks 2 MB (divalidasi di backend), lalu diunggah ke Cloudinary folder `fashionhub/products`. Gambar lama otomatis dihapus dari Cloudinary saat diganti atau produk dihapus. Jika Cloudinary gagal: 502.
 
 ## Checklist Kriteria
-- Backend: HTTP method & status code sesuai, JSON konsisten, CRUD `categories`↔`products`, bcrypt hash, JWT, middleware `authenticate` + `authorize(role)`, upload tervalidasi, express-validator + error handler global, semua data dari MySQL.
+- Backend: HTTP method & status code sesuai, JSON konsisten, CRUD `categories`↔`products`, bcrypt hash, JWT, middleware `authenticate` + `authorize(role)`, upload tervalidasi, express-validator + error handler global, semua data dari PostgreSQL.
 - Mobile: splash, login/register (dengan konfirmasi password), dashboard, bottom navigation (Beranda, Produk, Kategori, Profil), produk tampilan grid + pencarian + filter, list & detail, tambah, edit, hapus dengan dialog konfirmasi, upload gambar (galeri/kamera), tampil gambar, tombol hapus & menu kategori hanya untuk admin, SnackBar sukses/gagal.
 - Nilai tambah: pencarian, filter kategori, ringkasan stok menipis, pull-to-refresh.
 

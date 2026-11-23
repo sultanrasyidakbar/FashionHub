@@ -6,8 +6,16 @@
  * Menguji API lewat HTTP saja (tanpa melihat kode internal), mencatat
  * status code yang benar-benar diterima, lalu membersihkan data uji.
  */
-const mysql = require('mysql2/promise');
+const { Client } = require('pg');
 require('dotenv').config();
+// ENV_FILE=path/to/file memakai kredensial lain (mis. PostgreSQL lokal) tanpa menimpa .env.
+if (process.env.ENV_FILE) {
+  const fs = require('fs');
+  for (const line of fs.readFileSync(process.env.ENV_FILE, 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !line.trim().startsWith('#')) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+}
 
 const BASE = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '');
 const STAMP = Date.now().toString().slice(-6);
@@ -150,11 +158,13 @@ function pngBuffer(size = 1024) {
     async () => ({ status: (await req('POST', '/api/auth/register',
       { body: { name: 'Blackbox Admin', email: EMAIL_ADMIN, password: PASS } })).status }));
 
-  const db = await mysql.createConnection({
-    host: process.env.DB_HOST, user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD, database: process.env.DB_NAME,
+  const db = new Client({
+    host: process.env.DB_HOST, port: Number(process.env.DB_PORT) || 5432,
+    user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME,
+    ...(process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: false } } : {}),
   });
-  await db.query("UPDATE users u JOIN roles r ON r.id=u.role_id SET u.role_id=(SELECT id FROM roles WHERE name='admin') WHERE u.email=?", [EMAIL_ADMIN]);
+  await db.connect();
+  await db.query("UPDATE users SET role_id=(SELECT id FROM roles WHERE name='admin') WHERE email=$1", [EMAIL_ADMIN]);
   created.users.push(EMAIL_ADMIN);
 
   const loginAdmin = await req('POST', '/api/auth/login', { body: { email: EMAIL_ADMIN, password: PASS } });
@@ -370,11 +380,11 @@ function pngBuffer(size = 1024) {
   }
   // hapus kategori & user lewat SQL agar sisa data uji tidak tertinggal
   if (created.categories.length) {
-    await db.query('DELETE FROM products WHERE category_id IN (?)', [created.categories]);
-    await db.query('DELETE FROM categories WHERE id IN (?)', [created.categories]);
+    await db.query('DELETE FROM products WHERE category_id = ANY($1)', [created.categories]);
+    await db.query('DELETE FROM categories WHERE id = ANY($1)', [created.categories]);
   }
   if (created.users.length) {
-    await db.query('DELETE FROM users WHERE email IN (?)', [created.users]);
+    await db.query('DELETE FROM users WHERE email = ANY($1)', [created.users]);
   }
   await db.end();
 

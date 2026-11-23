@@ -20,19 +20,19 @@ router.get('/', wrap(async (req, res) => {
 }));
 
 router.post('/', authorize('admin'), rules, wrap(async (req, res) => {
-  const [r] = await db.query('INSERT INTO categories (name,description) VALUES (?,?)', [req.body.name, req.body.description || null]);
-  res.status(201).json({ success: true, message: 'Kategori ditambahkan', data: { id: r.insertId } });
+  const [, r] = await db.query('INSERT INTO categories (name,description) VALUES ($1,$2) RETURNING id', [req.body.name, req.body.description || null]);
+  res.status(201).json({ success: true, message: 'Kategori ditambahkan', data: { id: r.rows[0].id } });
 }));
 
 router.put('/:id', authorize('admin'), idRule, rules, wrap(async (req, res) => {
-  const [r] = await db.query('UPDATE categories SET name=?, description=? WHERE id=?', [req.body.name, req.body.description || null, req.params.id]);
-  if (!r.affectedRows) return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
+  const [, r] = await db.query('UPDATE categories SET name=$1, description=$2 WHERE id=$3', [req.body.name, req.body.description || null, req.params.id]);
+  if (!r.rowCount) return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
   res.json({ success: true, message: 'Kategori diperbarui', data: null });
 }));
 
 router.delete('/:id', authorize('admin'), idRule, wrap(async (req, res) => {
-  const [r] = await db.query('DELETE FROM categories WHERE id=?', [req.params.id]);
-  if (!r.affectedRows) return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
+  const [, r] = await db.query('DELETE FROM categories WHERE id=$1', [req.params.id]);
+  if (!r.rowCount) return res.status(404).json({ success: false, message: 'Kategori tidak ditemukan' });
   res.json({ success: true, message: 'Kategori dihapus', data: null });
 }));
 

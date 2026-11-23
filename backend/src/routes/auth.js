@@ -18,10 +18,10 @@ router.post('/register',
   wrap(async (req, res) => {
     const { name, email, password } = req.body;
     const hash = await bcrypt.hash(password, 10);
-    const [r] = await db.query(
-      "INSERT INTO users (name,email,password_hash,role_id) VALUES (?,?,?,(SELECT id FROM roles WHERE name='user'))",
+    const [, r] = await db.query(
+      "INSERT INTO users (name,email,password_hash,role_id) VALUES ($1,$2,$3,(SELECT id FROM roles WHERE name='user')) RETURNING id",
       [name, email, hash]);
-    res.status(201).json({ success: true, message: 'Registrasi berhasil', data: { id: r.insertId, name, email, role: 'user' } });
+    res.status(201).json({ success: true, message: 'Registrasi berhasil', data: { id: r.rows[0].id, name, email, role: 'user' } });
   }));
 
 router.post('/login',
@@ -30,7 +30,7 @@ router.post('/login',
   validate,
   wrap(async (req, res) => {
     const [rows] = await db.query(
-      'SELECT u.id,u.name,u.email,u.password_hash,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.email=?',
+      'SELECT u.id,u.name,u.email,u.password_hash,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.email=$1',
       [req.body.email]);
     const u = rows[0];
     if (!u || !(await bcrypt.compare(req.body.password, u.password_hash)))
@@ -39,7 +39,7 @@ router.post('/login',
   }));
 
 router.get('/me', authenticate, wrap(async (req, res) => {
-  const [rows] = await db.query('SELECT u.id,u.name,u.email,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=?', [req.user.id]);
+  const [rows] = await db.query('SELECT u.id,u.name,u.email,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=$1', [req.user.id]);
   if (!rows[0]) return res.status(401).json({ success: false, message: 'Pengguna tidak ditemukan' });
   res.json({ success: true, message: 'OK', data: rows[0] });
 }));
@@ -49,8 +49,8 @@ router.put('/profile', authenticate,
   body('name').trim().isLength({ min: 2, max: 100 }).withMessage('Nama 2-100 karakter'),
   validate,
   wrap(async (req, res) => {
-    await db.query('UPDATE users SET name=? WHERE id=?', [req.body.name, req.user.id]);
-    const [rows] = await db.query('SELECT u.id,u.name,u.email,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=?', [req.user.id]);
+    await db.query('UPDATE users SET name=$1 WHERE id=$2', [req.body.name, req.user.id]);
+    const [rows] = await db.query('SELECT u.id,u.name,u.email,r.name AS role FROM users u JOIN roles r ON r.id=u.role_id WHERE u.id=$1', [req.user.id]);
     res.json({ success: true, message: 'Profil diperbarui', data: rows[0] });
   }));
 
@@ -60,10 +60,10 @@ router.put('/password', authenticate,
   body('new_password').isLength({ min: 6 }).withMessage('Password baru minimal 6 karakter'),
   validate,
   wrap(async (req, res) => {
-    const [rows] = await db.query('SELECT password_hash FROM users WHERE id=?', [req.user.id]);
+    const [rows] = await db.query('SELECT password_hash FROM users WHERE id=$1', [req.user.id]);
     if (!rows[0] || !(await bcrypt.compare(req.body.current_password, rows[0].password_hash)))
       return res.status(400).json({ success: false, message: 'Password lama salah' });
-    await db.query('UPDATE users SET password_hash=? WHERE id=?', [await bcrypt.hash(req.body.new_password, 10), req.user.id]);
+    await db.query('UPDATE users SET password_hash=$1 WHERE id=$2', [await bcrypt.hash(req.body.new_password, 10), req.user.id]);
     res.json({ success: true, message: 'Password berhasil diubah', data: null });
   }));
 
