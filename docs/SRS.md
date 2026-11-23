@@ -4,11 +4,12 @@
 
 | Informasi | Keterangan |
 |---|---|
-| Versi dokumen | 1.0 |
-| Tanggal | 18 November 2026 |
+| Versi dokumen | 1.1 |
+| Tanggal | 23 November 2026 |
 | Sistem | FashionHub |
 | Jenis aplikasi | Aplikasi mobile Flutter dan REST API |
-| Basis data | MySQL |
+| Basis data | PostgreSQL (Aiven) |
+| Lingkungan produksi | REST API di Vercel, basis data di Aiven PostgreSQL |
 
 ## 1. Pendahuluan
 
@@ -17,7 +18,7 @@
 Dokumen ini menjelaskan kebutuhan fungsional dan nonfungsional FashionHub sebagai
 acuan implementasi, pengujian, dan evaluasi proyek. Sistem menyediakan aplikasi
 Flutter untuk pengguna dan admin, REST API berbasis Node.js/Express, serta basis
-data MySQL untuk mengelola akun, kategori, produk, dan stok.
+data PostgreSQL untuk mengelola akun, kategori, produk, dan stok.
 
 ### 1.2 Ruang Lingkup
 
@@ -43,7 +44,7 @@ tersedia.
 
 ### 1.4 Referensi
 
-- `database/schema.sql` - definisi tabel dan relasi basis data.
+- `database/schema.postgres.sql` - definisi tabel dan relasi basis data PostgreSQL.
 - `backend/src/routes/` - endpoint REST API.
 - `mobile_fashion/lib/` - aplikasi Flutter.
 - [ERD FashionHub](./ERD.md) - diagram entitas dan relasi.
@@ -55,7 +56,8 @@ tersedia.
 FashionHub menggunakan arsitektur client-server:
 
 1. Aplikasi Flutter mengirim permintaan HTTP/JSON ke REST API.
-2. REST API memvalidasi permintaan, mengautentikasi pengguna, dan mengakses MySQL.
+2. REST API memvalidasi permintaan, mengautentikasi pengguna, dan mengakses
+   PostgreSQL.
 3. Gambar produk diunggah melalui backend ke Cloudinary; URL gambar disimpan di
    tabel produk.
 4. Aplikasi menerima respons JSON dengan struktur umum
@@ -75,13 +77,18 @@ seed, bukan pilihan pada formulir registrasi.
 ### 2.3 Lingkungan Operasi
 
 - Aplikasi klien: Flutter/Dart, source berada di `mobile_fashion/`.
-- Server: Node.js dan Express.
-- Basis data: MySQL 8, tabel menggunakan InnoDB.
+- Server: Node.js 24 dan Express, dijalankan sebagai Vercel Serverless Function
+  (`backend/api/index.js`).
+- Basis data: PostgreSQL 17 (layanan Aiven, koneksi wajib SSL).
 - Penyimpanan gambar: Cloudinary.
 - Koneksi klien-server: HTTP REST dengan JSON; unggah gambar memakai multipart.
-- URL API bawaan klien: emulator Android menggunakan `10.0.2.2:3000`; web dan
-  desktop menggunakan `localhost:3000`. Perangkat fisik memerlukan alamat IP
-  komputer server yang dapat dijangkau.
+- Lingkungan produksi: REST API sebagai Vercel Serverless Function (Node.js 24,
+  region Singapore) dengan database PostgreSQL Aiven; pool koneksi dibatasi 3
+  karena plan gratis Aiven mengizinkan maksimal 20 koneksi.
+- URL API: build produksi diarahkan ke REST API di Vercel melalui
+  `--dart-define=API_BASE_URL=<url-api>`. Tanpa nilai itu, klien memakai URL
+  pengembangan: emulator Android `10.0.2.2:3000`; web dan desktop
+  `localhost:3000`.
 
 ### 2.4 Batasan dan Asumsi
 
@@ -122,7 +129,7 @@ ditampilkan untuk user dan dinonaktifkan ketika stok habis.
 |---|---|
 | Flutter ke backend | HTTP REST, JSON, header `Authorization: Bearer <token>` |
 | Unggah gambar | `multipart/form-data`, nama field `image` |
-| Backend ke MySQL | Query SQL menggunakan `mysql2/promise` |
+| Backend ke PostgreSQL | Query SQL parameter `$1, $2, ...` menggunakan pool `pg` |
 | Backend ke Cloudinary | Upload dan penghapusan aset gambar |
 | Penyimpanan sesi mobile | Token disimpan secara lokal menggunakan `shared_preferences` |
 
@@ -193,7 +200,7 @@ Respons sukses menggunakan `success: true`; respons gagal menggunakan
 | NFR-04 Kinerja komunikasi | Permintaan HTTP dari aplikasi memiliki batas waktu 15 detik; aplikasi harus menampilkan pesan bila server tidak dapat dijangkau atau waktu habis. |
 | NFR-05 Kemudahan penggunaan | Navigasi utama harus tersedia melalui empat tab, dan tindakan destruktif seperti penghapusan harus meminta konfirmasi. |
 | NFR-06 Kompatibilitas | Aplikasi harus dapat diarahkan ke URL backend yang sesuai dengan lingkungan emulator, desktop/web, atau perangkat fisik. |
-| NFR-07 Pemeliharaan | Backend dan Flutter harus berkomunikasi menggunakan kontrak JSON yang konsisten; data persisten disimpan di MySQL, sedangkan token sesi disimpan lokal di perangkat. |
+| NFR-07 Pemeliharaan | Backend dan Flutter harus berkomunikasi menggunakan kontrak JSON yang konsisten; data persisten disimpan di PostgreSQL, sedangkan token sesi disimpan lokal di perangkat. |
 
 ## 6. Aturan Bisnis
 
@@ -239,7 +246,7 @@ Respons sukses menggunakan `success: true`; respons gagal menggunakan
 1. Admin masuk ke aplikasi.
 2. Admin menambah/mengubah produk melalui form dan dapat memilih gambar dari
    galeri atau kamera.
-3. Sistem memvalidasi data dan menyimpan perubahan ke MySQL.
+3. Sistem memvalidasi data dan menyimpan perubahan ke PostgreSQL.
 4. Jika gambar diunggah, backend menyimpannya di Cloudinary.
 5. Aplikasi memuat ulang daftar/dashboard agar perubahan tampil.
 
