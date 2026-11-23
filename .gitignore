@@ -1,0 +1,13 @@
+node_modules
+.env
+.vercel
+*.log
+
+# Flutter
+mobile_fashion/.dart_tool/
+mobile_fashion/build/
+mobile_fashion/.flutter-plugins
+mobile_fashion/.flutter-plugins-dependencies
+
+# Office temp files
+~$*
