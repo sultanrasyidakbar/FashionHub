@@ -1,0 +1,468 @@
+{
+  "base": "http://localhost:3000",
+  "tanggal": "2026-11-23T01:17:34.453Z",
+  "total": 51,
+  "pass": 51,
+  "fail": 0,
+  "results": [
+    {
+      "id": "TC-01",
+      "fitur": "Health",
+      "skenario": "GET / mengembalikan status API",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-02",
+      "fitur": "Registrasi",
+      "skenario": "Registrasi akun user dengan data valid",
+      "harapan": "201",
+      "aktual": 201,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-03",
+      "fitur": "Registrasi",
+      "skenario": "Registrasi dengan email yang sudah terdaftar",
+      "harapan": "409",
+      "aktual": 409,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-04",
+      "fitur": "Registrasi",
+      "skenario": "Registrasi dengan format email tidak valid",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-05",
+      "fitur": "Registrasi",
+      "skenario": "Registrasi dengan password kurang dari 6 karakter",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-06",
+      "fitur": "Registrasi",
+      "skenario": "Registrasi dengan nama kurang dari 2 karakter",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-07",
+      "fitur": "Login",
+      "skenario": "Login dengan email dan password benar",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-08",
+      "fitur": "Login",
+      "skenario": "Login dengan password salah",
+      "harapan": "401",
+      "aktual": 401,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-09",
+      "fitur": "Login",
+      "skenario": "Login dengan email tidak terdaftar",
+      "harapan": "401",
+      "aktual": 401,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-10",
+      "fitur": "Login",
+      "skenario": "Login dengan password kosong",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-11",
+      "fitur": "Profil",
+      "skenario": "GET /api/auth/me tanpa token",
+      "harapan": "401",
+      "aktual": 401,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-12",
+      "fitur": "Profil",
+      "skenario": "GET /api/auth/me dengan token valid",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-13",
+      "fitur": "Profil",
+      "skenario": "GET /api/auth/me dengan token rusak",
+      "harapan": "401",
+      "aktual": 401,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-14",
+      "fitur": "Profil",
+      "skenario": "Ubah nama profil dengan nama valid",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-15",
+      "fitur": "Profil",
+      "skenario": "Ubah nama profil dengan 1 karakter",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-16",
+      "fitur": "Profil",
+      "skenario": "Ubah password dengan password lama salah",
+      "harapan": "400",
+      "aktual": 400,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-17",
+      "fitur": "Kategori",
+      "skenario": "GET kategori tanpa token",
+      "harapan": "401",
+      "aktual": 401,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-18",
+      "fitur": "Kategori",
+      "skenario": "GET kategori dengan token user",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-19",
+      "fitur": "Registrasi",
+      "skenario": "Membuat akun uji kedua (calon admin)",
+      "harapan": "201",
+      "aktual": 201,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-20",
+      "fitur": "Kategori",
+      "skenario": "Menambah kategori sebagai user biasa",
+      "harapan": "403",
+      "aktual": 403,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-21",
+      "fitur": "Kategori",
+      "skenario": "Menambah kategori sebagai admin",
+      "harapan": "201",
+      "aktual": 201,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-22",
+      "fitur": "Kategori",
+      "skenario": "Menambah kategori dengan nama 1 karakter",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-23",
+      "fitur": "Kategori",
+      "skenario": "Menambah kategori dengan nama duplikat",
+      "harapan": "409",
+      "aktual": 409,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-24",
+      "fitur": "Kategori",
+      "skenario": "Mengubah kategori yang ada",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-25",
+      "fitur": "Kategori",
+      "skenario": "Mengubah kategori dengan ID tidak ada",
+      "harapan": "404",
+      "aktual": 404,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-26",
+      "fitur": "Produk",
+      "skenario": "GET daftar produk tanpa token (publik)",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-27",
+      "fitur": "Produk",
+      "skenario": "GET daftar produk dengan pencarian nama",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-28",
+      "fitur": "Produk",
+      "skenario": "GET daftar produk dengan filter kategori",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-29",
+      "fitur": "Produk",
+      "skenario": "GET detail produk dengan ID valid",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-30",
+      "fitur": "Produk",
+      "skenario": "GET detail produk dengan ID tidak ada",
+      "harapan": "404",
+      "aktual": 404,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-31",
+      "fitur": "Produk",
+      "skenario": "GET detail produk dengan ID bukan angka",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-32",
+      "fitur": "Produk",
+      "skenario": "Menambah produk sebagai user biasa",
+      "harapan": "403",
+      "aktual": 403,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-33",
+      "fitur": "Produk",
+      "skenario": "Menambah produk valid sebagai admin",
+      "harapan": "201",
+      "aktual": 201,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-34",
+      "fitur": "Produk",
+      "skenario": "Menambah produk dengan harga negatif",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-35",
+      "fitur": "Produk",
+      "skenario": "Menambah produk dengan stok bukan bilangan bulat",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-36",
+      "fitur": "Produk",
+      "skenario": "Menambah produk dengan kategori tidak valid",
+      "harapan": "422",
+      "aktual": 422,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-37",
+      "fitur": "Upload",
+      "skenario": "Mengunggah gambar PNG di bawah 2 MB",
+      "harapan": "201",
+      "aktual": 201,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-38",
+      "fitur": "Upload",
+      "skenario": "Mengunggah file bertipe teks (ditolak)",
+      "harapan": "400",
+      "aktual": 400,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-39",
+      "fitur": "Upload",
+      "skenario": "Mengunggah gambar lebih dari 2 MB",
+      "harapan": "413",
+      "aktual": 413,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-40",
+      "fitur": "Produk",
+      "skenario": "Mengubah produk yang ada",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-41",
+      "fitur": "Produk",
+      "skenario": "Mengubah produk dengan ID tidak ada",
+      "harapan": "404",
+      "aktual": 404,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-42",
+      "fitur": "Pembelian",
+      "skenario": "User membeli produk yang stoknya tersedia",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": "stok sisa 7"
+    },
+    {
+      "id": "TC-43",
+      "fitur": "Pembelian",
+      "skenario": "Admin mencoba membeli produk",
+      "harapan": "403",
+      "aktual": 403,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-44",
+      "fitur": "Pembelian",
+      "skenario": "Membeli tanpa token",
+      "harapan": "401",
+      "aktual": 401,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-45",
+      "fitur": "Pembelian",
+      "skenario": "Membeli produk yang tidak ada",
+      "harapan": "404",
+      "aktual": 404,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-46",
+      "fitur": "Pembelian",
+      "skenario": "Membeli produk dengan stok habis",
+      "harapan": "409",
+      "aktual": 409,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-47",
+      "fitur": "Integritas",
+      "skenario": "Menghapus kategori yang masih dipakai produk",
+      "harapan": "409",
+      "aktual": 409,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-48",
+      "fitur": "Error",
+      "skenario": "Mengirim body JSON yang tidak valid",
+      "harapan": "400",
+      "aktual": 400,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-49",
+      "fitur": "Error",
+      "skenario": "Mengakses endpoint yang tidak terdaftar",
+      "harapan": "404",
+      "aktual": 404,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-50",
+      "fitur": "Produk",
+      "skenario": "Menghapus produk sebagai admin",
+      "harapan": "200",
+      "aktual": 200,
+      "hasil": "PASS",
+      "catatan": ""
+    },
+    {
+      "id": "TC-51",
+      "fitur": "Produk",
+      "skenario": "Menghapus produk yang tidak ada",
+      "harapan": "404",
+      "aktual": 404,
+      "hasil": "PASS",
+      "catatan": ""
+    }
+  ]
+}
