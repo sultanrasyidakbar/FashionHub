@@ -1,7 +1,7 @@
 /**
- * Menjalankan database/schema.sql ke database yang ada di .env.
- * Dipakai untuk menyiapkan database Aiven yang sudah dibuat lewat console
- * (Aiven tidak mengizinkan CREATE DATABASE / USE, jadi dua perintah itu dilewati).
+ * Menjalankan database/schema.postgres.sql ke database PostgreSQL di .env.
+ * Dipakai untuk menyiapkan database Aiven PostgreSQL yang sudah dibuat lewat
+ * console (Aiven yang membuat database-nya, jadi file ini hanya membuat tabel).
  *
  * Pemakaian: node scripts/db-init.js [--seed]
  */
@@ -10,35 +10,24 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../src/config/db');
 
-const SCHEMA = path.join(__dirname, '..', '..', 'database', 'schema.sql');
-
-function statements(sql) {
-  return sql
-    .split('\n')
-    .filter(line => !/^\s*--/.test(line))
-    .join('\n')
-    .split(';')
-    .map(s => s.trim())
-    .filter(Boolean)
-    // database sudah dibuat oleh Aiven, jadi dua perintah ini dilewati
-    .filter(s => !/^CREATE\s+DATABASE/i.test(s))
-    .filter(s => !/^USE\s+/i.test(s))
-    // buat idempoten agar aman dijalankan berulang
-    .map(s => s.replace(/^CREATE\s+TABLE\s+/i, 'CREATE TABLE IF NOT EXISTS '))
-    .map(s => s.replace(/^INSERT\s+INTO\s+/i, 'INSERT IGNORE INTO '));
-}
+const SCHEMA = path.join(__dirname, '..', '..', 'database', 'schema.postgres.sql');
 
 (async () => {
   const sql = fs.readFileSync(SCHEMA, 'utf8');
-  const list = statements(sql);
-  console.log(`Menjalankan ${list.length} perintah ke database ${process.env.DB_NAME} ...`);
-  for (const s of list) {
-    await db.query(s);
-    console.log('  ok:', s.split('\n')[0].slice(0, 70));
-  }
+  // File schema hanya berisi DDL + trigger function; jalankan sebagai satu blok
+  // agar CREATE FUNCTION ... $$ ... $$ tidak terpotong oleh pemisah pernyataan.
+  console.log(`Menjalankan schema ke database ${process.env.DB_NAME} @ ${process.env.DB_HOST} ...`);
+  await db.query(sql);
 
-  const [tables] = await db.query('SHOW TABLES');
-  console.log('\nTabel tersedia:', tables.map(t => Object.values(t)[0]).join(', '));
+  const [tables] = await db.query(
+    "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name");
+  console.log('Tabel tersedia:', tables.map(t => t.table_name).join(', '));
+
+  const [counts] = await db.query(`SELECT 'roles' AS t, COUNT(*) FROM roles
+    UNION ALL SELECT 'users', COUNT(*) FROM users
+    UNION ALL SELECT 'categories', COUNT(*) FROM categories
+    UNION ALL SELECT 'products', COUNT(*) FROM products`);
+  for (const row of counts) console.log(`  ${row.t}: ${row.count} baris`);
 
   if (process.argv.includes('--seed')) {
     console.log('\nMenjalankan seed...');

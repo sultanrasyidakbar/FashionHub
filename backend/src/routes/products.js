@@ -28,43 +28,42 @@ const rules = [
 
 router.get('/', wrap(async (req, res) => {
   const where = [], args = [];
-  if (req.query.search) { where.push('p.name LIKE ?'); args.push(`%${req.query.search}%`); }
-  if (req.query.category_id) { where.push('p.category_id = ?'); args.push(Number(req.query.category_id)); }
+  if (req.query.search) { where.push(`p.name ILIKE $${args.length + 1}`); args.push(`%${req.query.search}%`); }
+  if (req.query.category_id) { where.push(`p.category_id = $${args.length + 1}`); args.push(Number(req.query.category_id)); }
   const [rows] = await db.query(`${BASE} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY p.created_at DESC`, args);
   res.json({ success: true, message: 'OK', data: rows.map(p => fmt(req, p)) });
 }));
 
 router.get('/:id', idRule, wrap(async (req, res) => {
-  const [rows] = await db.query(`${BASE} WHERE p.id=?`, [req.params.id]);
+  const [rows] = await db.query(`${BASE} WHERE p.id=$1`, [req.params.id]);
   if (!rows[0]) return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
   res.json({ success: true, message: 'OK', data: fmt(req, rows[0]) });
 }));
 
 router.post('/:id/purchase', authenticate, authorize('user'), idRule, wrap(async (req, res) => {
-  const conn = await db.getConnection();
+  const conn = await db.transaction();
   try {
-    await conn.beginTransaction();
-    const [rows] = await conn.query(
-      'SELECT stock FROM products WHERE id=? FOR UPDATE',
+    const { rows } = await conn.query(
+      'SELECT stock FROM products WHERE id=$1 FOR UPDATE',
       [req.params.id],
     );
     if (!rows[0]) {
-      await conn.rollback();
+      await conn.query('ROLLBACK');
       return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
     }
     if (rows[0].stock < 1) {
-      await conn.rollback();
+      await conn.query('ROLLBACK');
       return res.status(409).json({ success: false, message: 'Stok produk habis' });
     }
-    await conn.query('UPDATE products SET stock=stock-1 WHERE id=?', [req.params.id]);
-    await conn.commit();
+    await conn.query('UPDATE products SET stock=stock-1 WHERE id=$1', [req.params.id]);
+    await conn.query('COMMIT');
     res.json({
       success: true,
       message: 'Produk berhasil dibeli',
       data: { stock: rows[0].stock - 1 },
     });
   } catch (e) {
-    await conn.rollback();
+    await conn.query('ROLLBACK').catch(() => {});
     throw e;
   } finally {
     conn.release();
@@ -76,34 +75,34 @@ router.post('/', authenticate, authorize('admin'), upload.single('image'), rules
   const { name, description, price, stock, category_id } = req.body;
   const img = req.file ? await uploadBuffer(req.file.buffer) : null;
   try {
-    const [r] = await db.query(
-      'INSERT INTO products (category_id,created_by,name,description,price,stock,image_url,image_public_id) VALUES (?,?,?,?,?,?,?,?)',
+    const [, r] = await db.query(
+      'INSERT INTO products (category_id,created_by,name,description,price,stock,image_url,image_public_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
       [category_id, req.user.id, name, description || null, price, stock, img?.secure_url || null, img?.public_id || null]);
-    const [rows] = await db.query(`${BASE} WHERE p.id=?`, [r.insertId]);
+    const [rows] = await db.query(`${BASE} WHERE p.id=$1`, [r.rows[0].id]);
     res.status(201).json({ success: true, message: 'Produk ditambahkan', data: fmt(req, rows[0]) });
   } catch (e) { if (img) await remove(img.public_id); throw e; }
 }));
 
 router.put('/:id', authenticate, authorize('admin'), upload.single('image'), idRule, rules, wrap(async (req, res) => {
-  const [old] = await db.query('SELECT image_url, image_public_id FROM products WHERE id=?', [req.params.id]);
+  const [old] = await db.query('SELECT image_url, image_public_id FROM products WHERE id=$1', [req.params.id]);
   if (!old[0]) return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
   const { name, description, price, stock, category_id } = req.body;
   const img = req.file ? await uploadBuffer(req.file.buffer) : null;
   try {
     await db.query(
-      'UPDATE products SET category_id=?,name=?,description=?,price=?,stock=?,image_url=?,image_public_id=? WHERE id=?',
+      'UPDATE products SET category_id=$1,name=$2,description=$3,price=$4,stock=$5,image_url=$6,image_public_id=$7 WHERE id=$8',
       [category_id, name, description || null, price, stock,
        img ? img.secure_url : old[0].image_url, img ? img.public_id : old[0].image_public_id, req.params.id]);
   } catch (e) { if (img) await remove(img.public_id); throw e; }
   if (img) await remove(old[0].image_public_id); // hapus gambar lama di Cloudinary
-  const [rows] = await db.query(`${BASE} WHERE p.id=?`, [req.params.id]);
+  const [rows] = await db.query(`${BASE} WHERE p.id=$1`, [req.params.id]);
   res.json({ success: true, message: 'Produk diperbarui', data: fmt(req, rows[0]) });
 }));
 
 router.delete('/:id', authenticate, authorize('admin'), idRule, wrap(async (req, res) => {
-  const [old] = await db.query('SELECT image_public_id FROM products WHERE id=?', [req.params.id]);
+  const [old] = await db.query('SELECT image_public_id FROM products WHERE id=$1', [req.params.id]);
   if (!old[0]) return res.status(404).json({ success: false, message: 'Produk tidak ditemukan' });
-  await db.query('DELETE FROM products WHERE id=?', [req.params.id]);
+  await db.query('DELETE FROM products WHERE id=$1', [req.params.id]);
   await remove(old[0].image_public_id);
   res.json({ success: true, message: 'Produk dihapus', data: null });
 }));
