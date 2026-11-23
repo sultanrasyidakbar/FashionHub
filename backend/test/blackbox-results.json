@@ -1,6 +1,6 @@
 {
-  "base": "http://localhost:3000",
-  "tanggal": "2026-11-23T06:06:23.721Z",
+  "base": "https://fashionhub-ebon.vercel.app",
+  "tanggal": "2026-11-23T10:04:59.825Z",
   "total": 51,
   "pass": 51,
   "fail": 0,
