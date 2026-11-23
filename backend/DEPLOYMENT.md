@@ -16,6 +16,7 @@ Panduan ini mencatat langkah deploy yang **sudah disiapkan di repo** dan langkah
 | `database/schema.postgres.sql` | DDL PostgreSQL (padanan `schema.sql` MySQL lama) |
 | `backend/scripts/db-init.js` | Membuat tabel dari `schema.postgres.sql` |
 | `backend/scripts/migrate-to-postgres.js` | Menyalin seluruh data MySQL → PostgreSQL |
+| `backend/scripts/copy-to-aiven.js` | Menyalin seluruh data PostgreSQL lokal → Aiven (schema + baris + sequence) |
 | `backend/scripts/deploy.sh` | Unggah env dari `.env` ke Vercel lalu `vercel --prod` |
 
 Diverifikasi lokal terhadap PostgreSQL 18: blackbox 51/51 PASS, `db:init` dan `seed` jalan,
@@ -60,12 +61,25 @@ cp .env.example .env      # isi DB_* dengan kredensial Aiven
 node scripts/db-init.js --seed
 ```
 
-**Pindahkan data dari MySQL yang sudah berjalan:**
+**Pindahkan data dari PostgreSQL lokal ke Aiven:**
 
 ```bash
 cd backend
-# .env.mysql berisi kredensial MySQL lama, .env berisi kredensial PostgreSQL Aiven
-node scripts/migrate-to-postgres.js --mysql .env.mysql --pg .env
+# .env berisi kredensial PostgreSQL lokal, .env.aiven berisi kredensial Aiven
+node scripts/copy-to-aiven.js --from .env --to .env.aiven
+```
+
+Skrip membuat tabel di Aiven, menyalin semua baris beserta id aslinya, menyetel sequence,
+lalu memeriksa relasi (user tanpa role, produk tanpa kategori, email duplikat). Aman
+dijalankan ulang — baris yang sudah ada tidak ditimpa.
+
+> `.env.aiven` berisi kredensial, jadi jangan di-commit. Simpan di `%TEMP%` bila tidak
+> ingin meninggalkannya di folder project.
+
+**Pindahkan langsung dari MySQL lama (tanpa lewat lokal):**
+
+```bash
+node scripts/migrate-to-postgres.js --mysql .env.mysql --pg .env.aiven
 ```
 
 Skrip membuat tabel, menyalin semua baris beserta id aslinya, menyetel sequence, lalu
